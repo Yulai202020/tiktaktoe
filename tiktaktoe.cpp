@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <list>
+#include <cstring>
 
 #include <iostream>
 #include <list>
@@ -10,6 +11,7 @@
 struct Coords {
     int row;
     int column;
+    std::string table[3][3];
 };
 
 struct Stat {
@@ -33,12 +35,13 @@ bool check_draw(std::string table[3][3]) {
     }
 }
 
-Coords player1(){
-    std::cout << "Player 1 : write row's id (1-3) ";
+Coords player(int id, std::string table[][3]){
+    while (true){
+    std::cout << "Player " << id << ": enter row's id (1-3) ";
     int row;
     std::cin >> row;
 
-    std::cout << "Player 1 : write column's id (1-3) ";
+    std::cout << "Player " << id << ": enter column's id (1-3) ";
     int column;
     std::cin >> column;
 
@@ -47,35 +50,34 @@ Coords player1(){
 
     if (row > 3 || column > 3) {
         std::cout << "Sorry invalid input" << "\n";
+        continue;
+    } else if (table[row][column] != " ") {
+        std::cout << "This cell is not empty" << "\n";
+        continue;
+    } else {
+        std::string players_char = "";
+        if (id == 1){
+            players_char = "o";
+        } else {
+            players_char = "x";
+        }
+        table[row][column] = players_char;
+        // break;
     }
 
     Coords coords;
     coords.row = row;
     coords.column = column;
-    return coords;
-}
 
-Coords player2(){
-    std::cout << "Player 2 : write row's id (1-3) ";
-    int row;
-    std::cin >> row;
-
-    std::cout << "Player 2 : write column's id (1-3) ";
-    int column;
-    std::cin >> column;
-
-    row--;
-    column--;
-
-    if (row > 3 || column > 3) {
-        std::cout << "Sorry invalid input" << "\n";
-        return {4,4};
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            coords.table[i][j] = table[i][j];
+        }
     }
 
-    Coords coords;
-    coords.row = row;
-    coords.column = column;
     return coords;
+    }
+
 }
 
 void clearScreen() {
@@ -142,13 +144,6 @@ Stat check_winner(std::string table[3][3]){
 
 
 int main() {
-    Coords coords;
-
-    Stat station;
-    station.game_on = true;
-    station.winner = "";
-
-    clearScreen();
 
     std::string table[3][3];
 
@@ -158,39 +153,54 @@ int main() {
         }
     }
 
+    Coords coords;
+
+    // copy table to coords
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            coords.table[i][j] = table[i][j];
+        }
+    }
+
+    Stat station;
+    station.game_on = true;
+    station.winner = "";
+
+    clearScreen();
+
     while (station.game_on) {
         // player 1
-        clearScreen();
-        printScreen(table);
+        printScreen(coords.table);
 
-        coords = player1();
-        table[coords.row][coords.column] = "o";
-
+        coords = player(1, coords.table);
+       
         // check winner
-        station = check_winner(table);
+        station = check_winner(coords.table);
 
         // check draw
-        station.game_on = !check_draw(table);
+        station.game_on = !check_draw(coords.table);
 
         if (station.game_on == false) {
             clearScreen();
-            printScreen(table);
+            printScreen(coords.table);
             break;
         }
-
-        // player 2 
+        
         clearScreen();
-        printScreen(table);
 
-        coords = player2();
-        table[coords.row][coords.column] = "x";
+        /// player 2
+        printScreen(coords.table);
+
+        coords = player(2, coords.table);
 
         // check winner
-        station = check_winner(table);
+        station = check_winner(coords.table);
 
         // check draw
-        station.game_on = !check_draw(table);
-        std::cout << station.game_on;
+        station.game_on = !check_draw(coords.table);
+
+        // clear screen
+        clearScreen();
     }
 
     if (station.winner == "o") {
